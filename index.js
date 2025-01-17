@@ -40,9 +40,12 @@ async function scrapePage(page, searchQuery, pageNumber) {
 }
 
 async function scrapeMercadoLibre(searchQuery, maxPages = 5) {
-  const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });    
   const page = await browser.newPage();
-
+ 
   const allProducts = [];
   let currentPage = 1;
   const itemsPerPage = 50;
