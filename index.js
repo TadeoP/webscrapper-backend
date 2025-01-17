@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -62,38 +62,38 @@ async function scrapeMercadoLibre(searchQuery, maxPages = 5) {
 }
 
 app.post('/scrape', async (req, res) => {
-    const { product, pages } = req.body;
-  
-    try {
-      const data = await scrapeMercadoLibre(product, pages);
-  
-      const rows = data.map(product => ({
-        Título: product.title,
-        'Precio Original': product.originalPrice,
-        'Precio Final': product.finalPrice,
-        Descuento: product.discount,
-        Imagen: product.image,
-        Enlace: product.link,
-        " ": "", // Columna vacía para mantener los enlaces más cortos
-      }));
-  
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Productos');
-  
-      const sanitizedQuery = product.replace(/ /g, '_');
-      const filePath = path.join(__dirname, `${sanitizedQuery}.xlsx`);
-      XLSX.writeFile(workbook, filePath);
-  
-      res.download(filePath, () => {
-        fs.unlinkSync(filePath); // Elimina el archivo después de enviarlo
-      });
-    } catch (error) {
-      console.error('Error al realizar el scraping:', error);
-      res.status(500).send('Error al realizar el scraping');
-    }
-  });
-  
+  const { product, pages } = req.body;
+
+  try {
+    const data = await scrapeMercadoLibre(product, pages);
+
+    const rows = data.map(product => ({
+      Título: product.title,
+      'Precio Original': product.originalPrice,
+      'Precio Final': product.finalPrice,
+      Descuento: product.discount,
+      Imagen: product.image,
+      Enlace: product.link,
+      " ": "", // Columna vacía para mantener los enlaces más cortos
+    }));
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Productos');
+
+    const sanitizedQuery = product.replace(/ /g, '_');
+    const filePath = path.join(__dirname, `${sanitizedQuery}.xlsx`);
+    XLSX.writeFile(workbook, filePath);
+
+    res.download(filePath, () => {
+      fs.unlinkSync(filePath); // Elimina el archivo después de enviarlo
+    });
+  } catch (error) {
+    console.error('Error al realizar el scraping:', error);
+    res.status(500).send('Error al realizar el scraping');
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
